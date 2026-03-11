@@ -1,31 +1,18 @@
-import express, { Express, Request, Response } from "express";
+import express, { Express } from "express";
 import morgan from "morgan";
 
-/**
- * Represents the response structure for the health check endpoint.
- */
-interface HealthCheckResponse {
-    status: string;
-    uptime: number;
-    timestamp: string;
-    version: string;
-}
+import { APP_CONFIG } from "../config/config";
+import errorHandler from "./api/v1/middleware/errorHandler";
+import healthRoutes from "./api/v1/routes/healthRoutes";
+import loanRoutes from "./api/v1/routes/loanRoutes";
 
 const app: Express = express();
 
-app.use(express.json());
 app.use(morgan("combined"));
+app.use(express.json());
+app.use(APP_CONFIG.apiPrefix, healthRoutes);
+app.use(APP_CONFIG.apiPrefix, loanRoutes);
+app.use(errorHandler);
 
-app.get("/api/v1/health", (_req: Request, res: Response): void => {
-    const healthData: HealthCheckResponse = {
-        status: "OK",
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString(),
-        version: "1.0.0",
-    };
-
-    res.json(healthData);
-});
-
+export { app };
 export default app;
-
