@@ -1,14 +1,11 @@
 import express, { Router } from "express";
 
 import { setCustomClaims } from "../controllers/adminController";
+import authenticate from "../middleware/authenticate";
 
 const router: Router = express.Router();
 
-/**
- * Route for setting custom claims on Firebase users.
- * Authentication and authorization are added in later phases.
- */
-router.post("/setCustomClaims", setCustomClaims);
+router.post("/setCustomClaims", authenticate, setCustomClaims);
 
 export default router;
 

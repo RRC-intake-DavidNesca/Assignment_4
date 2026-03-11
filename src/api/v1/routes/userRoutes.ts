@@ -1,14 +1,11 @@
 import express, { Router } from "express";
 
 import { getUserDetails } from "../controllers/userController";
+import authenticate from "../middleware/authenticate";
 
 const router: Router = express.Router();
 
-/**
- * Route for retrieving the current authenticated user's details.
- * Authentication is added in a later phase.
- */
-router.get("/me", getUserDetails);
+router.get("/me", authenticate, getUserDetails);
 
 export default router;
 
