@@ -1,73 +1,83 @@
+import type { DocumentSnapshot, QuerySnapshot } from "firebase-admin/firestore";
+
 import { CreateLoanInput, Loan, UpdateLoanInput } from "../models/loanModel";
+import * as firestoreRepository from "../repositories/firestoreRepository";
 
 /**
- * In-memory loan application data for the Phase 4 baseline.
- * Firestore integration is added in Phase 5.
+ * Firestore collection used for loan documents.
+ * Replace YOUR_STUDENT_ID with the real student ID before taking screenshots.
  */
-const loans: Loan[] = [
-    {
-        id: 1,
-        applicant: "John Smith",
-        amount: 50000,
-        status: "pending",
-        createdAt: "2025-01-10T10:00:00.000Z"
-    },
-    {
-        id: 3,
-        applicant: "Michael Chen",
-        amount: 500000,
-        status: "pending",
-        createdAt: "2025-01-05T10:00:00.000Z"
-    },
-    {
-        id: 4,
-        applicant: "Emily Williams",
-        amount: 1000000,
-        status: "flagged",
-        createdAt: "2025-01-03T10:00:00.000Z"
-    },
-    {
-        id: 5,
-        applicant: "Test User",
-        amount: 75000,
-        status: "pending",
-        createdAt: "2025-12-19T20:09:30.211Z"
-    }
-];
-
-let nextLoanId: number = 6;
+export const COLLECTION_NAME: string = "0436080_loans";
 
 /**
- * Retrieves all loan applications.
+ * Retrieves all loan applications from Firestore.
  *
  * @returns Array of all loan applications.
  */
 export const getAllLoans = async (): Promise<Loan[]> => {
-    const clonedLoans: Loan[] = structuredClone(loans);
-    return clonedLoans;
+    try {
+        const snapshot: QuerySnapshot =
+            await firestoreRepository.getDocuments(COLLECTION_NAME);
+
+        const loans: Loan[] = [];
+
+        snapshot.forEach((loanDoc): void => {
+            const data: Omit<Loan, "id"> = loanDoc.data() as Omit<Loan, "id">;
+
+            loans.push({
+                id: loanDoc.id,
+                applicant: data.applicant,
+                amount: data.amount,
+                status: data.status,
+                createdAt: data.createdAt
+            });
+        });
+
+        return loans;
+    } catch (error: unknown) {
+        const errorMessage: string =
+            error instanceof Error ? error.message : "Unknown error";
+
+        throw new Error(`Failed to get loans: ${errorMessage}`);
+    }
 };
 
 /**
- * Retrieves a loan application by its ID.
+ * Retrieves a single loan application by ID from Firestore.
  *
  * @param id - The loan ID.
  * @returns The matching loan application, or undefined when not found.
  */
-export const getLoanById = async (id: number): Promise<Loan | undefined> => {
-    const loan: Loan | undefined = loans.find(
-        (existingLoan: Loan): boolean => existingLoan.id === id
-    );
+export const getLoanById = async (
+    id: string
+): Promise<Loan | undefined> => {
+    try {
+        const loanDoc: DocumentSnapshot | null =
+            await firestoreRepository.getDocumentById(COLLECTION_NAME, id);
 
-    if (!loan) {
-        return undefined;
+        if (!loanDoc) {
+            return undefined;
+        }
+
+        const data: Omit<Loan, "id"> = loanDoc.data() as Omit<Loan, "id">;
+
+        return {
+            id: loanDoc.id,
+            applicant: data.applicant,
+            amount: data.amount,
+            status: data.status,
+            createdAt: data.createdAt
+        };
+    } catch (error: unknown) {
+        const errorMessage: string =
+            error instanceof Error ? error.message : "Unknown error";
+
+        throw new Error(`Failed to get loan ${id}: ${errorMessage}`);
     }
-
-    const clonedLoan: Loan = structuredClone(loan);
-    return clonedLoan;
 };
 
 /**
- * Creates a new loan application.
+ * Creates a new loan application in Firestore.
  *
  * @param loanData - The input required to create a loan.
  * @returns The newly created loan application.
@@ -75,68 +85,106 @@ export const getLoanById = async (id: number): Promise<Loan | undefined> => {
 export const createLoan = async (
     loanData: CreateLoanInput
 ): Promise<Loan> => {
-    const newLoan: Loan = {
-        id: nextLoanId,
-        applicant: loanData.applicant,
-        amount: loanData.amount,
-        status: "pending",
-        createdAt: new Date().toISOString()
-    };
+    try {
+        const newLoanData: Omit<Loan, "id"> = {
+            applicant: loanData.applicant,
+            amount: loanData.amount,
+            status: "pending",
+            createdAt: new Date().toISOString()
+        };
 
-    loans.push(newLoan);
-    nextLoanId += 1;
+        const id: string = await firestoreRepository.createDocument<
+            Omit<Loan, "id">
+        >(COLLECTION_NAME, newLoanData);
 
-    const clonedLoan: Loan = structuredClone(newLoan);
-    return clonedLoan;
+        return {
+            id,
+            ...newLoanData
+        };
+    } catch (error: unknown) {
+        const errorMessage: string =
+            error instanceof Error ? error.message : "Unknown error";
+
+        throw new Error(`Failed to create loan: ${errorMessage}`);
+    }
 };
 
 /**
- * Updates an existing loan application.
+ * Updates an existing loan application in Firestore.
  *
  * @param id - The ID of the loan to update.
  * @param loanData - The fields allowed to be updated.
  * @returns The updated loan application, or undefined when not found.
  */
 export const updateLoan = async (
-    id: number,
+    id: string,
     loanData: UpdateLoanInput
 ): Promise<Loan | undefined> => {
-    const index: number = loans.findIndex(
-        (existingLoan: Loan): boolean => existingLoan.id === id
-    );
+    try {
+        const existingLoanDoc: DocumentSnapshot | null =
+            await firestoreRepository.getDocumentById(COLLECTION_NAME, id);
 
-    if (index === -1) {
-        return undefined;
+        if (!existingLoanDoc) {
+            return undefined;
+        }
+
+        const existingLoanData: Omit<Loan, "id"> =
+            existingLoanDoc.data() as Omit<Loan, "id">;
+
+        await firestoreRepository.updateDocument<UpdateLoanInput>(
+            COLLECTION_NAME,
+            id,
+            loanData
+        );
+
+        return {
+            id,
+            applicant: existingLoanData.applicant,
+            amount: existingLoanData.amount,
+            status: loanData.status,
+            createdAt: existingLoanData.createdAt
+        };
+    } catch (error: unknown) {
+        const errorMessage: string =
+            error instanceof Error ? error.message : "Unknown error";
+
+        throw new Error(`Failed to update loan ${id}: ${errorMessage}`);
     }
-
-    loans[index] = {
-        ...loans[index],
-        ...loanData
-    };
-
-    const clonedLoan: Loan = structuredClone(loans[index]);
-    return clonedLoan;
 };
 
 /**
- * Deletes an existing loan application.
+ * Deletes an existing loan application from Firestore.
  *
  * @param id - The ID of the loan to delete.
  * @returns The deleted loan application, or undefined when not found.
  */
 export const deleteLoan = async (
-    id: number
+    id: string
 ): Promise<Loan | undefined> => {
-    const index: number = loans.findIndex(
-        (existingLoan: Loan): boolean => existingLoan.id === id
-    );
+    try {
+        const existingLoanDoc: DocumentSnapshot | null =
+            await firestoreRepository.getDocumentById(COLLECTION_NAME, id);
 
-    if (index === -1) {
-        return undefined;
+        if (!existingLoanDoc) {
+            return undefined;
+        }
+
+        const existingLoanData: Omit<Loan, "id"> =
+            existingLoanDoc.data() as Omit<Loan, "id">;
+
+        await firestoreRepository.deleteDocument(COLLECTION_NAME, id);
+
+        return {
+            id,
+            applicant: existingLoanData.applicant,
+            amount: existingLoanData.amount,
+            status: existingLoanData.status,
+            createdAt: existingLoanData.createdAt
+        };
+    } catch (error: unknown) {
+        const errorMessage: string =
+            error instanceof Error ? error.message : "Unknown error";
+
+        throw new Error(`Failed to delete loan ${id}: ${errorMessage}`);
     }
-
-    const [deletedLoan]: Loan[] = loans.splice(index, 1);
-    const clonedLoan: Loan = structuredClone(deletedLoan);
-
-    return clonedLoan;
 };

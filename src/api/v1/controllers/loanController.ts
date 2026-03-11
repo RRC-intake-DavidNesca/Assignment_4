@@ -50,7 +50,7 @@ export const getLoanById = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        const id: number = Number(req.params.id);
+        const id: string = req.params.id;
         const loan: Loan | undefined = await loanService.getLoanById(id);
 
         if (!loan) {
@@ -131,7 +131,7 @@ export const updateLoan = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        const id: number = Number(req.params.id);
+        const id: string = req.params.id;
         const {
             status
         }: {
@@ -187,7 +187,7 @@ export const deleteLoan = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        const id: number = Number(req.params.id);
+        const id: string = req.params.id;
         const deletedLoan: Loan | undefined = await loanService.deleteLoan(id);
 
         if (!deletedLoan) {

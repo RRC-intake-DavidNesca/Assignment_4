@@ -7,7 +7,7 @@ export type LoanStatus = "pending" | "under_review" | "flagged";
  * Represents a loan application in the system.
  */
 export interface Loan {
-    id: number;
+    id: string;
     applicant: string;
     amount: number;
     status: LoanStatus;
