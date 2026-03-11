@@ -8,6 +8,7 @@ import {
     errorLogger,
 } from "./api/v1/middleware/logger";
 import adminRoutes from "./api/v1/routes/adminRoutes";
+import authRoutes from "./api/v1/routes/authRoutes";
 import healthRoutes from "./api/v1/routes/healthRoutes";
 import loanRoutes from "./api/v1/routes/loanRoutes";
 import userRoutes from "./api/v1/routes/userRoutes";
@@ -34,6 +35,7 @@ app.use(express.json());
  */
 app.use(APP_CONFIG.apiPrefix, healthRoutes);
 app.use(APP_CONFIG.apiPrefix, loanRoutes);
+app.use(`${APP_CONFIG.apiPrefix}/auth`, authRoutes);
 app.use(`${APP_CONFIG.apiPrefix}/users`, userRoutes);
 app.use(`${APP_CONFIG.apiPrefix}/admin`, adminRoutes);
 

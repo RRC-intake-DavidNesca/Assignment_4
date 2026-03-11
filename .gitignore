@@ -7,3 +7,5 @@ coverage/
 firebase-service-account.json
 *-service-account.json
 serviceAccountKey.json
+credentials.json
+src/logs/

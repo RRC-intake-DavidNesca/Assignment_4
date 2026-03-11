@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { DecodedIdToken } from "firebase-admin/auth";
 
-import { auth } from "../../../../config/firebaseConfig";
+import { auth } from "../../../config/firebaseConfig";
 import { AuthenticationError } from "../errors/errors";
 
 /**

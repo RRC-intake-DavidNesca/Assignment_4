@@ -1,7 +1,7 @@
 import type { DocumentSnapshot, QuerySnapshot } from "firebase-admin/firestore";
 
 import { CreateLoanInput, Loan, UpdateLoanInput } from "../models/loanModel";
-import * as firestoreRepository from "../repositories/firestoreRepository";
+import * as firestoreRepository from "../utils/firestoreRepository";
 
 /**
  * Firestore collection used for loan documents.

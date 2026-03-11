@@ -1,31 +1,30 @@
 import request, { Response } from "supertest";
-
-jest.mock("../../config/firebaseConfig", () => {
-    const actual: Record<string, unknown> = jest.requireActual(
-        "../../config/firebaseConfig"
-    ) as Record<string, unknown>;
-
-    return {
-        ...actual,
-        auth: {
-            verifyIdToken: jest.fn()
-        }
-    };
-});
-
-import { auth } from "../../config/firebaseConfig";
 import { app } from "../../src/app";
 import { HTTP_STATUS } from "../../src/constants/httpConstants";
 
-const mockedAuth: { verifyIdToken: jest.Mock } = auth as unknown as {
-    verifyIdToken: jest.Mock;
-};
-
 describe("Loan Routes", (): void => {
+    jest.setTimeout(60000);
+    const password: string = "password123";
+    let officerToken: string = "";
+    let managerToken: string = "";
+    let adminToken: string = "";
     let createdLoanId: string = "";
 
-    beforeEach((): void => {
-        jest.clearAllMocks();
+    const signIn = async (email: string): Promise<string> => {
+        const response: Response = await request(app)
+            .post("/api/v1/auth/signIn")
+            .send({ email, password });
+
+        expect(response.status).toBe(HTTP_STATUS.OK);
+        expect(response.body).toHaveProperty("idToken");
+
+        return response.body.idToken as string;
+    };
+
+    beforeAll(async (): Promise<void> => {
+        officerToken = await signIn("officer@pixell-river.com");
+        managerToken = await signIn("manager@pixell-river.com");
+        adminToken = await signIn("admin@pixell-river.com");
     });
 
     it("should return 401 when no token is provided for a protected loan route", async (): Promise<void> => {
@@ -43,10 +42,6 @@ describe("Loan Routes", (): void => {
     });
 
     it("should return 401 when the token is invalid", async (): Promise<void> => {
-        mockedAuth.verifyIdToken.mockRejectedValueOnce(
-            new Error("Invalid token")
-        );
-
         const response: Response = await request(app)
             .get("/api/v1/loans")
             .set("Authorization", "Bearer invalid.token.here");
@@ -63,14 +58,9 @@ describe("Loan Routes", (): void => {
     });
 
     it("should allow officer access to get all loans", async (): Promise<void> => {
-        mockedAuth.verifyIdToken.mockResolvedValueOnce({
-            uid: "officer-uid",
-            role: "officer"
-        });
-
         const response: Response = await request(app)
             .get("/api/v1/loans")
-            .set("Authorization", "Bearer officer-token");
+            .set("Authorization", `Bearer ${officerToken}`);
 
         expect(response.status).toBe(HTTP_STATUS.OK);
         expect(response.body.message).toBe("Loan applications retrieved");
@@ -78,14 +68,9 @@ describe("Loan Routes", (): void => {
     });
 
     it("should allow officer access to get a loan by id and reach handler-level 404 when missing", async (): Promise<void> => {
-        mockedAuth.verifyIdToken.mockResolvedValueOnce({
-            uid: "officer-uid",
-            role: "officer"
-        });
-
         const response: Response = await request(app)
             .get("/api/v1/loans/999")
-            .set("Authorization", "Bearer officer-token");
+            .set("Authorization", `Bearer ${officerToken}`);
 
         expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
         expect(response.body).toEqual({
@@ -99,14 +84,9 @@ describe("Loan Routes", (): void => {
     });
 
     it("should forbid officer access to create a loan", async (): Promise<void> => {
-        mockedAuth.verifyIdToken.mockResolvedValueOnce({
-            uid: "officer-uid",
-            role: "officer"
-        });
-
         const response: Response = await request(app)
             .post("/api/v1/loans")
-            .set("Authorization", "Bearer officer-token")
+            .set("Authorization", `Bearer ${officerToken}`)
             .send({
                 applicant: "Officer Attempt",
                 amount: 250000
@@ -124,14 +104,9 @@ describe("Loan Routes", (): void => {
     });
 
     it("should allow manager access to create a loan", async (): Promise<void> => {
-        mockedAuth.verifyIdToken.mockResolvedValueOnce({
-            uid: "manager-uid",
-            role: "manager"
-        });
-
         const response: Response = await request(app)
             .post("/api/v1/loans")
-            .set("Authorization", "Bearer manager-token")
+            .set("Authorization", `Bearer ${managerToken}`)
             .send({
                 applicant: "Manager Created Loan",
                 amount: 125000
@@ -153,14 +128,9 @@ describe("Loan Routes", (): void => {
     });
 
     it("should allow manager access to update a loan", async (): Promise<void> => {
-        mockedAuth.verifyIdToken.mockResolvedValueOnce({
-            uid: "manager-uid",
-            role: "manager"
-        });
-
         const response: Response = await request(app)
             .put(`/api/v1/loans/${createdLoanId}`)
-            .set("Authorization", "Bearer manager-token")
+            .set("Authorization", `Bearer ${managerToken}`)
             .send({
                 status: "under_review"
             });
@@ -179,14 +149,9 @@ describe("Loan Routes", (): void => {
     });
 
     it("should forbid manager access to delete a loan", async (): Promise<void> => {
-        mockedAuth.verifyIdToken.mockResolvedValueOnce({
-            uid: "manager-uid",
-            role: "manager"
-        });
-
         const response: Response = await request(app)
             .delete(`/api/v1/loans/${createdLoanId}`)
-            .set("Authorization", "Bearer manager-token");
+            .set("Authorization", `Bearer ${managerToken}`);
 
         expect(response.status).toBe(HTTP_STATUS.FORBIDDEN);
         expect(response.body).toEqual({
@@ -200,14 +165,9 @@ describe("Loan Routes", (): void => {
     });
 
     it("should allow admin access to delete a loan", async (): Promise<void> => {
-        mockedAuth.verifyIdToken.mockResolvedValueOnce({
-            uid: "admin-uid",
-            role: "admin"
-        });
-
         const response: Response = await request(app)
             .delete(`/api/v1/loans/${createdLoanId}`)
-            .set("Authorization", "Bearer admin-token");
+            .set("Authorization", `Bearer ${adminToken}`);
 
         expect(response.status).toBe(HTTP_STATUS.OK);
         expect(response.body).toEqual({

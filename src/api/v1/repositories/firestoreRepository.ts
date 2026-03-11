@@ -4,7 +4,7 @@ import type {
     QuerySnapshot
 } from "firebase-admin/firestore";
 
-import { db } from "../../../../config/firebaseConfig";
+import { db } from "../../../config/firebaseConfig";
 
 /**
  * Creates a new document in a specified Firestore collection.
