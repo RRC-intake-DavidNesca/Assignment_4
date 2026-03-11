@@ -15,3 +15,22 @@ export const errorResponse = (
         timestamp: new Date().toISOString(),
     };
 };
+
+/**
+ * Builds a standardized success response object.
+ *
+ * @param data - Successful response payload.
+ * @param message - Optional human-readable success message.
+ * @returns Success response shape with timestamp.
+ */
+export const successResponse = <T>(
+    data: T,
+    message?: string
+): { success: true; data: T; message?: string; timestamp: string } => {
+    return {
+        success: true,
+        data,
+        message,
+        timestamp: new Date().toISOString(),
+    };
+};
