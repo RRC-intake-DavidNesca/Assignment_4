@@ -1,9 +1,17 @@
 import Joi from "joi";
+import type { ObjectSchema } from "joi";
+
+interface LoanSchemas {
+    create: { body: ObjectSchema };
+    getById: { params: ObjectSchema };
+    update: { params: ObjectSchema; body: ObjectSchema };
+    delete: { params: ObjectSchema };
+}
 
 /**
  * Loan operation schemas organized by request part.
  */
-export const loanSchemas = {
+export const loanSchemas: LoanSchemas = {
     /**
      * POST /loans - Create new loan
      */
