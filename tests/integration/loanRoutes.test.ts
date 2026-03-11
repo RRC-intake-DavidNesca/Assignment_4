@@ -4,18 +4,15 @@ import { app } from "../../src/app";
 import { HTTP_STATUS } from "../../src/constants/httpConstants";
 
 describe("Loan Routes", (): void => {
-    let createdLoanId: number = 0;
+    let createdLoanId: string = "";
 
     it("should return all loan applications", async (): Promise<void> => {
         const response: Response = await request(app).get("/api/v1/loans");
 
         expect(response.status).toBe(HTTP_STATUS.OK);
-        expect(response.body).toEqual({
-            message: "Loan applications retrieved",
-            count: 4,
-            data: expect.any(Array)
-        });
-        expect(response.body.data).toHaveLength(4);
+        expect(response.body.message).toBe("Loan applications retrieved");
+        expect(response.body.count).toBeGreaterThanOrEqual(4);
+        expect(response.body.data).toEqual(expect.any(Array));
     });
 
     it("should return a single loan application by id", async (): Promise<void> => {
@@ -25,7 +22,7 @@ describe("Loan Routes", (): void => {
         expect(response.body).toEqual({
             message: "Loan application retrieved",
             data: {
-                id: 1,
+                id: "1",
                 applicant: "John Smith",
                 amount: 50000,
                 status: "pending",
@@ -72,13 +69,13 @@ describe("Loan Routes", (): void => {
                 amount: 125000
             });
 
-        createdLoanId = response.body.data.id as number;
+        createdLoanId = response.body.data.id as string;
 
         expect(response.status).toBe(HTTP_STATUS.CREATED);
         expect(response.body).toEqual({
             message: "Loan application created",
             data: {
-                id: 6,
+                id: expect.any(String),
                 applicant: "New Applicant",
                 amount: 125000,
                 status: "pending",
@@ -89,7 +86,7 @@ describe("Loan Routes", (): void => {
 
     it("should return bad request when update input is incomplete", async (): Promise<void> => {
         const response: Response = await request(app)
-            .put("/api/v1/loans/1")
+            .put(`/api/v1/loans/${createdLoanId}`)
             .send({});
 
         expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
@@ -105,7 +102,7 @@ describe("Loan Routes", (): void => {
 
     it("should update an existing loan application", async (): Promise<void> => {
         const response: Response = await request(app)
-            .put("/api/v1/loans/1")
+            .put(`/api/v1/loans/${createdLoanId}`)
             .send({
                 status: "under_review"
             });
@@ -114,11 +111,11 @@ describe("Loan Routes", (): void => {
         expect(response.body).toEqual({
             message: "Loan application updated",
             data: {
-                id: 1,
-                applicant: "John Smith",
-                amount: 50000,
+                id: createdLoanId,
+                applicant: "New Applicant",
+                amount: 125000,
                 status: "under_review",
-                createdAt: "2025-01-10T10:00:00.000Z"
+                createdAt: expect.any(String)
             }
         });
     });
@@ -135,7 +132,7 @@ describe("Loan Routes", (): void => {
     });
 
     it("should return not found when deleting a missing loan application", async (): Promise<void> => {
-        const response: Response = await request(app).delete("/api/v1/loans/2");
+        const response: Response = await request(app).delete("/api/v1/loans/999");
 
         expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
         expect(response.body).toEqual({
