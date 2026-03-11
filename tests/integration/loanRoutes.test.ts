@@ -46,19 +46,14 @@ describe("Loan Routes", (): void => {
         });
     });
 
-    it("should return bad request when create input is incomplete", async (): Promise<void> => {
+    it("should return validation error when create input is incomplete", async (): Promise<void> => {
         const response: Response = await request(app)
             .post("/api/v1/loans")
             .send({});
 
         expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
         expect(response.body).toEqual({
-            success: false,
-            error: {
-                message: "Applicant and amount are required",
-                code: "INVALID_LOAN_INPUT"
-            },
-            timestamp: expect.any(String)
+            error: "Validation error: Body: Applicant is required, Body: Amount is required"
         });
     });
 
@@ -85,19 +80,14 @@ describe("Loan Routes", (): void => {
         });
     });
 
-    it("should return bad request when update input is incomplete", async (): Promise<void> => {
+    it("should return validation error when update input is incomplete", async (): Promise<void> => {
         const response: Response = await request(app)
             .put(`/api/v1/loans/${createdLoanId}`)
             .send({});
 
         expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
         expect(response.body).toEqual({
-            success: false,
-            error: {
-                message: "Loan status is required",
-                code: "INVALID_LOAN_UPDATE"
-            },
-            timestamp: expect.any(String)
+            error: "Validation error: Body: Loan status is required"
         });
     });
 
