@@ -1,5 +1,6 @@
 import { initializeApp, cert, ServiceAccount } from "firebase-admin/app";
-import { getFirestore, Firestore } from "firebase-admin/firestore";
+import { Auth, getAuth } from "firebase-admin/auth";
+import { Firestore, getFirestore } from "firebase-admin/firestore";
 
 import * as serviceAccount from "./firebase-service-account.json";
 
@@ -15,4 +16,9 @@ initializeApp({
  */
 const db: Firestore = getFirestore();
 
-export { db };
+/**
+ * Firebase Authentication admin instance.
+ */
+const auth: Auth = getAuth();
+
+export { db, auth };
