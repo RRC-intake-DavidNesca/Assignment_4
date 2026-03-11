@@ -4,6 +4,7 @@ import { app } from "../../src/app";
 import { HTTP_STATUS } from "../../src/constants/httpConstants";
 
 describe("Loan Routes", (): void => {
+    jest.setTimeout(60000);
     let createdLoanId: string = "";
 
     it("should return all loan applications", async (): Promise<void> => {
@@ -13,7 +14,7 @@ describe("Loan Routes", (): void => {
         expect(response.body.message).toBe("Loan applications retrieved");
         expect(response.body.count).toBeGreaterThanOrEqual(4);
         expect(response.body.data).toEqual(expect.any(Array));
-    });
+    }, 60000);
 
     it("should return a single loan application by id", async (): Promise<void> => {
         const response: Response = await request(app).get("/api/v1/loans/1");

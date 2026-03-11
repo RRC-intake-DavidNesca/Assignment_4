@@ -4,7 +4,7 @@ import tsParser from "@typescript-eslint/parser";
 
 export default tseslint.config(
     {
-        ignores: ["dist/**", "node_modules/**", "coverage/**", "logs/**", "*.log"],
+        ignores: ["dist/**", "node_modules/**", "coverage/**", "logs/**", "*.log", "jest.config.js"],
     },
     eslint.configs.recommended,
     ...tseslint.configs.recommended,
@@ -36,6 +36,7 @@ export default tseslint.config(
                     variableDeclarationIgnoreFunction: true,
                 },
             ],
+            "no-console": "warn",
             "@typescript-eslint/no-require-imports": "off",
             "@typescript-eslint/no-var-requires": "off"
         },
