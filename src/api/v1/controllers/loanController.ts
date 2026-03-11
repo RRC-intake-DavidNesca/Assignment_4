@@ -5,7 +5,6 @@ import { errorResponse } from "../models/responseModel";
 import {
     CreateLoanInput,
     Loan,
-    LoanStatus,
     UpdateLoanInput
 } from "../models/loanModel";
 import * as loanService from "../services/loanService";
@@ -75,7 +74,7 @@ export const getLoanById = async (
  * @param req - The incoming request object.
  * @param res - The outgoing response object.
  * @param next - The next middleware function.
- * @returns Sends the created loan response or a bad request error response.
+ * @returns Sends the created loan response.
  */
 export const createLoan = async (
     req: Request,
@@ -83,27 +82,9 @@ export const createLoan = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        const {
-            applicant,
-            amount
-        }: {
-            applicant: string | undefined;
-            amount: number | undefined;
-        } = req.body;
-
-        if (!applicant || amount === undefined) {
-            res.status(HTTP_STATUS.BAD_REQUEST).json(
-                errorResponse(
-                    "Applicant and amount are required",
-                    "INVALID_LOAN_INPUT"
-                )
-            );
-            return;
-        }
-
         const loanData: CreateLoanInput = {
-            applicant: applicant,
-            amount: amount
+            applicant: req.body.applicant as string,
+            amount: req.body.amount as number
         };
 
         const newLoan: Loan = await loanService.createLoan(loanData);
@@ -123,7 +104,7 @@ export const createLoan = async (
  * @param req - The incoming request object.
  * @param res - The outgoing response object.
  * @param next - The next middleware function.
- * @returns Sends the updated loan response, a bad request response, or a not found response.
+ * @returns Sends the updated loan response or a not found response.
  */
 export const updateLoan = async (
     req: Request,
@@ -132,24 +113,9 @@ export const updateLoan = async (
 ): Promise<void> => {
     try {
         const id: string = req.params.id;
-        const {
-            status
-        }: {
-            status: LoanStatus | undefined;
-        } = req.body;
-
-        if (!status) {
-            res.status(HTTP_STATUS.BAD_REQUEST).json(
-                errorResponse(
-                    "Loan status is required",
-                    "INVALID_LOAN_UPDATE"
-                )
-            );
-            return;
-        }
 
         const updateData: UpdateLoanInput = {
-            status: status
+            status: req.body.status as UpdateLoanInput["status"]
         };
 
         const updatedLoan: Loan | undefined = await loanService.updateLoan(
